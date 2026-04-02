@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/aaltwesthuis/claude-monitor/internal/config"
-	"github.com/aaltwesthuis/claude-monitor/internal/tui"
+	"github.com/aaltwesthuis/claude-monitor/internal/tui/theme"
 )
 
 // RenderFooter renders the bottom status bar.
@@ -16,16 +16,16 @@ func RenderFooter(startTime time.Time, width int) string {
 	now := time.Now()
 
 	// Left: version + timestamp
-	left := tui.LabelMD.Render(
+	left := theme.LabelMD.Render(
 		fmt.Sprintf("CLAUDE_MONITOR_V%s // %s", config.Version, now.Format("2006-01-02T15:04:05Z")),
 	)
 
 	// Center: version tag
-	center := tui.LabelMD.Render(config.VersionTag)
+	center := theme.LabelMD.Render(config.VersionTag)
 
 	// Right: uptime
 	uptime := formatUptime(time.Since(startTime))
-	right := tui.LabelMD.Render(fmt.Sprintf("UPTIME: %s", uptime))
+	right := theme.LabelMD.Render(fmt.Sprintf("UPTIME: %s", uptime))
 
 	// Layout: left --- center --- right
 	leftW := lipgloss.Width(left)
@@ -40,7 +40,7 @@ func RenderFooter(startTime time.Time, width int) string {
 	gapRight := gapTotal - gapLeft
 
 	return lipgloss.NewStyle().
-		Background(tui.ColSurfaceContainer()).
+		Background(theme.ColSurfaceContainer()).
 		Width(width).
 		Render(
 			left +

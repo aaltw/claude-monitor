@@ -8,15 +8,15 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/aaltwesthuis/claude-monitor/internal/data"
-	"github.com/aaltwesthuis/claude-monitor/internal/tui"
+	"github.com/aaltwesthuis/claude-monitor/internal/tui/theme"
 )
 
 // RenderUsagePanel renders the left 2/3 usage statistics panel.
 func RenderUsagePanel(usage data.UsageSnapshot, width int, isStale bool, animTick int) string {
-	bg := tui.SurfaceContainer.Width(width)
+	bg := theme.SurfaceContainer.Width(width)
 
 	if !usage.HasData {
-		noData := tui.LabelMD.Render("N O   D A T A")
+		noData := theme.LabelMD.Render("N O   D A T A")
 		content := lipgloss.Place(width-4, 8, lipgloss.Center, lipgloss.Center, noData)
 		return bg.Padding(1, 2).Render(content)
 	}
@@ -24,17 +24,17 @@ func RenderUsagePanel(usage data.UsageSnapshot, width int, isStale bool, animTic
 	var b strings.Builder
 
 	// Header line
-	header := tui.LabelMD.Render(tui.LetterSpace("COMPUTE METRICS"))
+	header := theme.LabelMD.Render(theme.LetterSpace("COMPUTE METRICS"))
 	staleIndicator := ""
 	if isStale {
 		if animTick%10 < 5 {
-			staleIndicator = tui.StatusWaitingStyle.Render("  [STALE]")
+			staleIndicator = theme.StatusWaitingStyle.Render("  [STALE]")
 		} else {
-			staleIndicator = tui.StatusWaitingDimStyle.Render("  [STALE]")
+			staleIndicator = theme.StatusWaitingDimStyle.Render("  [STALE]")
 		}
 	}
 	hostname, _ := hostnameShort()
-	nodeLabel := tui.LabelMD.Render(fmt.Sprintf("NODE: %s", hostname))
+	nodeLabel := theme.LabelMD.Render(fmt.Sprintf("NODE: %s", hostname))
 
 	headerLine := lipgloss.JoinHorizontal(lipgloss.Top,
 		header+staleIndicator,
@@ -44,7 +44,7 @@ func RenderUsagePanel(usage data.UsageSnapshot, width int, isStale bool, animTic
 	b.WriteString(headerLine + "\n")
 
 	// Subheader
-	b.WriteString(tui.HeadlineMD.Render("USAGE_STATISTICS") + "\n\n")
+	b.WriteString(theme.HeadlineMD.Render("USAGE_STATISTICS") + "\n\n")
 
 	// 5H bar
 	b.WriteString(renderBar("5H WINDOW USAGE", usage.FiveHour, width-4))
@@ -60,12 +60,12 @@ func renderBar(label string, w data.WindowUsage, barWidth int) string {
 	var b strings.Builder
 
 	// Colored square indicator
-	gradColor := tui.GradientColor(w.UsedPercentage)
+	gradColor := theme.GradientColor(w.UsedPercentage)
 	square := lipgloss.NewStyle().Foreground(gradColor).Render("■")
 
 	// Label line
-	labelText := tui.LabelMD.Render(fmt.Sprintf("%s %s", square, tui.LetterSpace(label)))
-	resetTime := tui.LabelMD.Render(fmt.Sprintf("RESETS_AT: %s", w.ResetsAt.Format("15:04")))
+	labelText := theme.LabelMD.Render(fmt.Sprintf("%s %s", square, theme.LetterSpace(label)))
+	resetTime := theme.LabelMD.Render(fmt.Sprintf("RESETS_AT: %s", w.ResetsAt.Format("15:04")))
 
 	labelLine := lipgloss.JoinHorizontal(lipgloss.Top,
 		labelText,
@@ -90,7 +90,7 @@ func renderBar(label string, w data.WindowUsage, barWidth int) string {
 	var bar strings.Builder
 	for i := 0; i < filled; i++ {
 		pctAtPos := float64(i) / float64(fillWidth) * 100.0
-		c := tui.GradientColor(pctAtPos)
+		c := theme.GradientColor(pctAtPos)
 		bar.WriteString(lipgloss.NewStyle().Foreground(c).Render("█"))
 	}
 	emptyColor := lipgloss.Color("#1a1a2e")

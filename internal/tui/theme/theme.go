@@ -1,4 +1,4 @@
-package tui
+package theme
 
 import (
 	"github.com/charmbracelet/lipgloss"
@@ -175,5 +175,6 @@ func ColRed() lipgloss.Color              { return colRed }
 func ColOnSurface() lipgloss.Color        { return colOnSurface }
 func ColOnSurfaceVariant() lipgloss.Color { return colOnSurfaceVariant }
 func ColSurfaceContainer() lipgloss.Color { return colSurfaceContainer }
+func ColSurface() lipgloss.Color          { return colSurface }
 func ColSurfaceBright() lipgloss.Color    { return colSurfaceBright }
 func ColOutlineVariant() lipgloss.Color   { return colOutlineVariant }
