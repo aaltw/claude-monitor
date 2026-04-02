@@ -163,3 +163,17 @@ var SizeWarning = lipgloss.NewStyle().
 	Foreground(colOnSurfaceVariant).
 	Bold(true).
 	Align(lipgloss.Center)
+
+// ── Color accessors for use in components that need raw lipgloss.Color values ─
+
+func ColPrimary() lipgloss.Color          { return colPrimary }
+func ColSecondary() lipgloss.Color        { return colSecondary }
+func ColGreen() lipgloss.Color            { return colGreen }
+func ColYellow() lipgloss.Color           { return colYellow }
+func ColPeach() lipgloss.Color            { return colPeach }
+func ColRed() lipgloss.Color              { return colRed }
+func ColOnSurface() lipgloss.Color        { return colOnSurface }
+func ColOnSurfaceVariant() lipgloss.Color { return colOnSurfaceVariant }
+func ColSurfaceContainer() lipgloss.Color { return colSurfaceContainer }
+func ColSurfaceBright() lipgloss.Color    { return colSurfaceBright }
+func ColOutlineVariant() lipgloss.Color   { return colOutlineVariant }
