@@ -7,8 +7,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/aaltwesthuis/claude-monitor/internal/config"
-	"github.com/aaltwesthuis/claude-monitor/internal/tui/theme"
+	"github.com/aaltw/claude-monitor/internal/config"
+	"github.com/aaltw/claude-monitor/internal/tui/theme"
 )
 
 // RenderFooter renders the bottom status bar.

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aaltwesthuis/claude-monitor/internal/config"
-	"github.com/aaltwesthuis/claude-monitor/internal/data"
+	"github.com/aaltw/claude-monitor/internal/config"
+	"github.com/aaltw/claude-monitor/internal/data"
 )
 
 // Poller reads data files and pushes messages to the hub.

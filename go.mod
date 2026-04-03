@@ -1,4 +1,4 @@
-module github.com/aaltwesthuis/claude-monitor
+module github.com/aaltw/claude-monitor
 
 go 1.26.1
 

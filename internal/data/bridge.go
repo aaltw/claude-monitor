@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aaltwesthuis/claude-monitor/internal/config"
+	"github.com/aaltw/claude-monitor/internal/config"
 )
 
 // ReadBridgeFiles reads all claude-monitor-*.json files from the given directory.

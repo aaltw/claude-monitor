@@ -7,8 +7,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/aaltwesthuis/claude-monitor/internal/data"
-	"github.com/aaltwesthuis/claude-monitor/internal/tui/theme"
+	"github.com/aaltw/claude-monitor/internal/data"
+	"github.com/aaltw/claude-monitor/internal/tui/theme"
 )
 
 // RenderUsagePanel renders the left 2/3 usage statistics panel.

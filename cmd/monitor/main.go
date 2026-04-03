@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/aaltwesthuis/claude-monitor/internal/config"
-	"github.com/aaltwesthuis/claude-monitor/internal/tui"
-	"github.com/aaltwesthuis/claude-monitor/internal/web"
-	webfs "github.com/aaltwesthuis/claude-monitor/web"
+	"github.com/aaltw/claude-monitor/internal/config"
+	"github.com/aaltw/claude-monitor/internal/tui"
+	"github.com/aaltw/claude-monitor/internal/web"
+	webfs "github.com/aaltw/claude-monitor/web"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

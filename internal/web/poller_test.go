@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aaltwesthuis/claude-monitor/internal/data"
+	"github.com/aaltw/claude-monitor/internal/data"
 )
 
 func TestBuildStateMsg(t *testing.T) {
