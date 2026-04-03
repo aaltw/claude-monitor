@@ -113,6 +113,24 @@ func TestSessionHexID(t *testing.T) {
 	}
 }
 
+func TestMergeSessionsPopulatesModel(t *testing.T) {
+	pid := os.Getpid()
+	registries := []SessionRegistry{
+		{PID: pid, SessionID: "sess-1", Cwd: "/tmp/test", StartedAt: 1000},
+	}
+	bridges := []BridgeData{
+		{SessionID: "sess-1", Timestamp: time.Now().Unix(), Model: "Opus 4.6"},
+	}
+
+	sessions := MergeSessions(registries, nil, bridges)
+	if len(sessions) != 1 {
+		t.Fatalf("expected 1 session, got %d", len(sessions))
+	}
+	if sessions[0].Model != "Opus 4.6" {
+		t.Errorf("expected model 'Opus 4.6', got %q", sessions[0].Model)
+	}
+}
+
 func TestFormatLatency(t *testing.T) {
 	tests := []struct {
 		since time.Duration

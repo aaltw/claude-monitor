@@ -52,7 +52,7 @@ type SessionState struct {
 // SessionRegistry represents data from ~/.claude/sessions/{pid}.json
 type SessionRegistry struct {
 	PID       int    `json:"pid"`
-	SessionID string `json:"session_id"`
+	SessionID string `json:"sessionId"`
 	Cwd       string `json:"cwd"`
 	Name      string `json:"name"`
 	StartedAt int64  `json:"startedAt"`
@@ -65,6 +65,7 @@ type SessionInfo struct {
 	SessionID   string
 	Name        string // session name or last path component of cwd
 	Cwd         string
+	Model       string // model name from bridge file, e.g. "Opus 4.6"
 	Status      SessionStatus
 	LastBridge  time.Time // time of last bridge file update
 	StartedAt   time.Time
@@ -116,13 +117,13 @@ type WindowUsage struct {
 func SeverityFor(pct float64) string {
 	switch {
 	case pct >= 90:
-		return "CRITICAL"
+		return "Critical"
 	case pct >= 70:
-		return "HIGH"
+		return "High"
 	case pct >= 50:
-		return "ELEVATED"
+		return "Elevated"
 	default:
-		return "NOMINAL"
+		return "Nominal"
 	}
 }
 
