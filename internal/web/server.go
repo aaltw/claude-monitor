@@ -66,19 +66,21 @@ func (s *Server) staticHandler() http.Handler {
 }
 
 func (s *Server) handleTmuxFocus(w http.ResponseWriter, r *http.Request) {
-	// Extract PID from /api/tmux/focus/{pid}
-	pidStr := strings.TrimPrefix(r.URL.Path, "/api/tmux/focus/")
-	pid, err := strconv.Atoi(pidStr)
-	if err != nil {
-		http.Error(w, "invalid pid", http.StatusBadRequest)
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Find which tmux pane contains this PID by checking pane trees
+	pidStr := strings.TrimPrefix(r.URL.Path, "/api/tmux/focus/")
+	pid, err := strconv.Atoi(pidStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "reason": "invalid pid"})
+		return
+	}
+
 	paneID, err := findTmuxPane(pid)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"ok":false,"reason":"session not in tmux"}`))
+		writeJSON(w, http.StatusNotFound, map[string]any{"ok": false, "reason": "session not in tmux"})
 		return
 	}
 
@@ -90,13 +92,16 @@ func (s *Server) handleTmuxFocus(w http.ResponseWriter, r *http.Request) {
 	exec.Command("tmux", "select-window", "-t", paneID).Run()
 	exec.Command("tmux", "select-pane", "-t", paneID).Run()
 
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "pane": paneID})
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(fmt.Sprintf(`{"ok":true,"pane":"%s"}`, paneID)))
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(v)
 }
 
 // findTmuxPane finds the tmux pane that contains the given PID.
-// Strategy: use `tmux list-panes` with #{pane_pid}, then for each pane
-// recursively search descendants using pgrep -P to find the target PID.
 func findTmuxPane(targetPID int) (string, error) {
 	out, err := exec.Command("tmux", "list-panes", "-a", "-F", "#{pane_id} #{pane_pid}").Output()
 	if err != nil {
@@ -113,12 +118,9 @@ func findTmuxPane(targetPID int) (string, error) {
 		paneID := parts[0]
 		panePID := parts[1]
 
-		// Check if target IS the pane pid
 		if panePID == target {
 			return paneID, nil
 		}
-
-		// Search descendants of this pane's shell for the target PID
 		if hasDescendant(panePID, target, 0) {
 			return paneID, nil
 		}
@@ -155,7 +157,7 @@ func hasDescendant(parentPID, targetPID string, depth int) bool {
 
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		OriginPatterns: []string{"*"},
+		OriginPatterns: []string{"localhost:*", "127.0.0.1:*"},
 	})
 	if err != nil {
 		log.Printf("ws accept: %v", err)
@@ -180,10 +182,11 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	s.hub.Register(ch)
 	defer s.hub.Unregister(ch)
 
-	// Read loop (handles ping/pong and detects disconnect)
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
+	// Read loop: handles ping/pong and detects disconnect.
+	// nhooyr.io/websocket v1 Write is safe for concurrent use from multiple goroutines.
 	go func() {
 		for {
 			_, msg, err := conn.Read(ctx)

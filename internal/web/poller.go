@@ -77,9 +77,12 @@ func (p *Poller) pollAndBroadcastState() {
 		}
 	}
 
+	// Rebuild prevStatus from current sessions only (prevents unbounded growth)
+	newStatus := make(map[int]string, len(sessions))
 	for _, s := range sessions {
-		p.prevStatus[s.PID] = statusString(s.Status)
+		newStatus[s.PID] = statusString(s.Status)
 	}
+	p.prevStatus = newStatus
 
 	msg := BuildStateMsg(usage, burnRate, sessions, bridges)
 	if msgJSON, err := json.Marshal(msg); err == nil {

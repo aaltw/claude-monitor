@@ -45,7 +45,7 @@ func runWeb(args []string) {
 		log.Fatalf("embedded static files: %v", err)
 	}
 
-	addr := fmt.Sprintf(":%d", *port)
+	addr := fmt.Sprintf("127.0.0.1:%d", *port)
 	srv := web.NewServer(addr, *dev, staticFS)
 	if err := srv.Run(); err != nil {
 		log.Fatalf("web server: %v", err)

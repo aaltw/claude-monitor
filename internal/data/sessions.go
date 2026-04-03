@@ -73,6 +73,12 @@ func MergeSessions(registries []SessionRegistry, states map[int]SessionState, br
 			info.Name = filepath.Base(reg.Cwd)
 		}
 
+		// Bridge data (must be set before status determination)
+		if b, ok := bridgeBySession[reg.SessionID]; ok {
+			info.LastBridge = time.Unix(b.Timestamp, 0)
+			info.Model = b.Model
+		}
+
 		// PID liveness
 		info.Alive = IsPIDAlive(reg.PID)
 
@@ -92,16 +98,9 @@ func MergeSessions(registries []SessionRegistry, states map[int]SessionState, br
 				info.Status = StatusIdle
 			}
 		} else if !info.LastBridge.IsZero() && time.Since(info.LastBridge) < 10*time.Second {
-			// No state file, but bridge was recently updated - session is active
 			info.Status = StatusWorking
 		} else {
 			info.Status = StatusIdle
-		}
-
-		// Latency and model from bridge file
-		if b, ok := bridgeBySession[reg.SessionID]; ok {
-			info.LastBridge = time.Unix(b.Timestamp, 0)
-			info.Model = b.Model
 		}
 
 		sessions = append(sessions, info)
