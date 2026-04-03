@@ -25,9 +25,9 @@ func RenderSessionTable(sessions []data.SessionInfo, width int, sortOrder data.S
 
 	// Header
 	icon := theme.PrimaryText.Render("≡")
-	title := lipgloss.NewStyle().Foreground(theme.ColPrimary()).Bold(true).Render("  " + theme.LetterSpace("ACTIVE_PROCESS_MATRIX"))
-	total := theme.LabelMD.Render(fmt.Sprintf("● TOTAL: %02d", len(sessions)))
-	load := lipgloss.NewStyle().Foreground(loadColor).Render(fmt.Sprintf("● LOAD: %s", loadStatus))
+	title := lipgloss.NewStyle().Foreground(theme.ColPrimary()).Bold(true).Render("  Active Process Matrix")
+	total := theme.LabelMD.Render(fmt.Sprintf("● Total: %02d", len(sessions)))
+	load := lipgloss.NewStyle().Foreground(loadColor).Render(fmt.Sprintf("● Load: %s", loadStatus))
 
 	rightHeader := total + "    " + load
 	headerLine := lipgloss.JoinHorizontal(lipgloss.Top,
@@ -39,17 +39,17 @@ func RenderSessionTable(sessions []data.SessionInfo, width int, sortOrder data.S
 
 	// Column headers
 	colWidths := columnWidths(width - 4)
-	headers := []string{"SESSION_ID", "TASK_KERNEL", "LATENCY", "STATUS_BIT"}
+	headers := []string{"Session", "Task", "Latency", "Status"}
 	var headerCells []string
 	for i, h := range headers {
-		cell := theme.LabelMD.Width(colWidths[i]).Render(theme.LetterSpace(h))
+		cell := theme.LabelMD.Width(colWidths[i]).Render(h)
 		headerCells = append(headerCells, cell)
 	}
 	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, headerCells...) + "\n")
 
 	// Empty state
 	if len(sessions) == 0 {
-		emptyMsg := theme.LabelMD.Render("N O   A C T I V E   S E S S I O N S")
+		emptyMsg := theme.LabelMD.Render("No active sessions")
 		b.WriteString("\n" + lipgloss.Place(width-4, 3, lipgloss.Center, lipgloss.Center, emptyMsg) + "\n")
 		return bg.Padding(1, 2).Render(b.String())
 	}
@@ -100,26 +100,26 @@ func renderStatusChip(status data.SessionStatus, width, animTick int) string {
 	switch status {
 	case data.StatusWorking:
 		frame := theme.SpinnerFrames[animTick%len(theme.SpinnerFrames)]
-		return style.Render(theme.StatusWorkingStyle.Render(frame + " WORKING"))
+		return style.Render(theme.StatusWorkingStyle.Render(frame + " Working"))
 
 	case data.StatusWaiting:
 		if animTick%10 < 5 {
-			return style.Render(theme.StatusWaitingStyle.Render("● WAITING"))
+			return style.Render(theme.StatusWaitingStyle.Render("● Waiting"))
 		}
-		return style.Render(theme.StatusWaitingDimStyle.Render("● WAITING"))
+		return style.Render(theme.StatusWaitingDimStyle.Render("● Waiting"))
 
 	case data.StatusBlocked:
 		// Faster pulse: 3 ticks on, 3 off (600ms cycle at 200ms tick)
 		if animTick%6 < 3 {
-			return style.Render(theme.StatusBlockedStyle.Render("⚠ BLOCKED"))
+			return style.Render(theme.StatusBlockedStyle.Render("⚠ Blocked"))
 		}
-		return style.Render(theme.StatusBlockedDimStyle.Render("⚠ BLOCKED"))
+		return style.Render(theme.StatusBlockedDimStyle.Render("⚠ Blocked"))
 
 	case data.StatusZombie:
-		return style.Render(theme.StatusZombieStyle.Render("ZOMBIE_STATE"))
+		return style.Render(theme.StatusZombieStyle.Render("Zombie"))
 
 	default: // Idle
-		return style.Render(theme.StatusIdleStyle.Render("○ IDLE"))
+		return style.Render(theme.StatusIdleStyle.Render("○ Idle"))
 	}
 }
 
@@ -147,12 +147,12 @@ func computeLoad(sessions []data.SessionInfo) (string, lipgloss.Color) {
 		}
 	}
 	if hasBlocked {
-		return "CRITICAL", theme.ColRed()
+		return "Critical", theme.ColRed()
 	}
 	if hasWaiting {
-		return "ATTENTION", theme.ColPeach()
+		return "Attention", theme.ColPeach()
 	}
-	return "NOMINAL", theme.ColGreen()
+	return "Nominal", theme.ColGreen()
 }
 
 func sortSessions(sessions []data.SessionInfo, order data.SortOrder) {

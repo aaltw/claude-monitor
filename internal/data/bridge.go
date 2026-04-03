@@ -98,6 +98,12 @@ func LatestUsage(bridges []BridgeData) UsageSnapshot {
 		return UsageSnapshot{HasData: false}
 	}
 
+	// Sum tokens across all bridge files for accurate velocity tracking
+	totalTokens := 0
+	for i := range bridges {
+		totalTokens += bridges[i].Tokens.Total()
+	}
+
 	lastUpdate := time.Unix(best.Timestamp, 0)
 	isStale := time.Since(lastUpdate) > config.StaleThreshold
 
@@ -112,7 +118,7 @@ func LatestUsage(bridges []BridgeData) UsageSnapshot {
 			ResetsAt:       time.Unix(int64(best.RateLimits.SevenDay.ResetsAt), 0),
 			Severity:       SeverityFor(best.RateLimits.SevenDay.UsedPercentage),
 		},
-		TotalTokens: best.Tokens.Total(),
+		TotalTokens: totalTokens,
 		HasData:     true,
 		IsStale:     isStale,
 		LastUpdate:  lastUpdate,

@@ -16,7 +16,7 @@ func RenderUsagePanel(usage data.UsageSnapshot, width int, isStale bool, animTic
 	bg := theme.SurfaceContainer.Width(width)
 
 	if !usage.HasData {
-		noData := theme.LabelMD.Render("N O   D A T A")
+		noData := theme.LabelMD.Render("No Data")
 		content := lipgloss.Place(width-4, 8, lipgloss.Center, lipgloss.Center, noData)
 		return bg.Padding(1, 2).Render(content)
 	}
@@ -24,7 +24,7 @@ func RenderUsagePanel(usage data.UsageSnapshot, width int, isStale bool, animTic
 	var b strings.Builder
 
 	// Header line
-	header := theme.LabelMD.Render(theme.LetterSpace("COMPUTE METRICS"))
+	header := theme.LabelMD.Render("Compute Metrics")
 	staleIndicator := ""
 	if isStale {
 		if animTick%10 < 5 {
@@ -34,7 +34,7 @@ func RenderUsagePanel(usage data.UsageSnapshot, width int, isStale bool, animTic
 		}
 	}
 	hostname, _ := hostnameShort()
-	nodeLabel := theme.LabelMD.Render(fmt.Sprintf("NODE: %s", hostname))
+	nodeLabel := theme.LabelMD.Render(fmt.Sprintf("Node: %s", hostname))
 
 	headerLine := lipgloss.JoinHorizontal(lipgloss.Top,
 		header+staleIndicator,
@@ -44,14 +44,14 @@ func RenderUsagePanel(usage data.UsageSnapshot, width int, isStale bool, animTic
 	b.WriteString(headerLine + "\n")
 
 	// Subheader
-	b.WriteString(theme.HeadlineMD.Render("USAGE_STATISTICS") + "\n\n")
+	b.WriteString(theme.HeadlineMD.Render("Usage Statistics") + "\n\n")
 
 	// 5H bar
-	b.WriteString(renderBar("5H WINDOW USAGE", usage.FiveHour, width-4))
+	b.WriteString(renderBar("5h Window Usage", usage.FiveHour, width-4))
 	b.WriteString("\n")
 
 	// 7D bar
-	b.WriteString(renderBar("7D WINDOW USAGE", usage.SevenDay, width-4))
+	b.WriteString(renderBar("7d Window Usage", usage.SevenDay, width-4))
 
 	return bg.Padding(1, 2).Render(b.String())
 }
@@ -64,8 +64,8 @@ func renderBar(label string, w data.WindowUsage, barWidth int) string {
 	square := lipgloss.NewStyle().Foreground(gradColor).Render("■")
 
 	// Label line
-	labelText := theme.LabelMD.Render(fmt.Sprintf("%s %s", square, theme.LetterSpace(label)))
-	resetTime := theme.LabelMD.Render(fmt.Sprintf("RESETS_AT: %s", w.ResetsAt.Format("15:04")))
+	labelText := theme.LabelMD.Render(fmt.Sprintf("%s %s", square, label))
+	resetTime := theme.LabelMD.Render(fmt.Sprintf("Resets at: %s", w.ResetsAt.Format("15:04")))
 
 	labelLine := lipgloss.JoinHorizontal(lipgloss.Top,
 		labelText,
@@ -75,7 +75,7 @@ func renderBar(label string, w data.WindowUsage, barWidth int) string {
 	b.WriteString(labelLine + "\n")
 
 	// Progress bar
-	fillWidth := barWidth - 2 // padding
+	fillWidth := barWidth - 2
 	if fillWidth < 10 {
 		fillWidth = 10
 	}
@@ -87,49 +87,20 @@ func renderBar(label string, w data.WindowUsage, barWidth int) string {
 		filled = 0
 	}
 
-	var bar strings.Builder
-	for i := 0; i < filled; i++ {
-		pctAtPos := float64(i) / float64(fillWidth) * 100.0
-		c := theme.GradientColor(pctAtPos)
-		bar.WriteString(lipgloss.NewStyle().Foreground(c).Render("█"))
-	}
-	emptyColor := lipgloss.Color("#1a1a2e")
-	for i := filled; i < fillWidth; i++ {
-		bar.WriteString(lipgloss.NewStyle().Foreground(emptyColor).Render("░"))
-	}
+	// Solid filled section in the gradient color, empty section in panel background
+	filledStr := lipgloss.NewStyle().
+		Foreground(gradColor).
+		Render(strings.Repeat("━", filled))
+	emptyStr := lipgloss.NewStyle().
+		Foreground(theme.ColSurfaceBright()).
+		Render(strings.Repeat("━", fillWidth-filled))
 
-	// Overlay text centered on bar
-	overlayText := fmt.Sprintf("%d%% %s", int(w.UsedPercentage), w.Severity)
-	barStr := bar.String()
-
-	// Build the bar line with overlay
-	barLine := lipgloss.NewStyle().Width(barWidth).Render(barStr)
-
-	// Place overlay text
-	overlayStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#e6e3fa")).
-		Bold(true)
-	overlay := overlayStyle.Render(overlayText)
-
-	// Center the overlay on the bar
-	overlayPos := (barWidth - lipgloss.Width(overlay)) / 2
-	if overlayPos < 0 {
-		overlayPos = 0
-	}
-
-	// Rebuild with overlay -- for terminal, we just show bar + label below or inline
-	// Since true overlay isn't possible, show percentage at the end
 	pctLabel := lipgloss.NewStyle().
 		Foreground(gradColor).
 		Bold(true).
 		Render(fmt.Sprintf(" %d%% %s", int(w.UsedPercentage), w.Severity))
 
-	_ = barLine
-	_ = overlay
-	_ = overlayPos
-	_ = overlayText
-
-	b.WriteString(bar.String() + pctLabel + "\n")
+	b.WriteString(filledStr + emptyStr + pctLabel + "\n")
 
 	return b.String()
 }

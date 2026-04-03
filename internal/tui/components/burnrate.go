@@ -20,33 +20,33 @@ func RenderBurnRatePanel(rate data.BurnRate, width, height int, animTick int) st
 	// Header
 	header := lipgloss.NewStyle().
 		Foreground(theme.ColPrimary()).
-		Render("🔥 " + theme.LetterSpace("BURN_RATE_ANALYSIS"))
+		Render("Burn Rate Analysis")
 	b.WriteString(header + "\n\n")
 
 	if !rate.HasData {
-		b.WriteString(theme.LabelMD.Render(theme.LetterSpace("RATE_P_HOUR")) + "\n")
+		b.WriteString(theme.LabelMD.Render("Rate/Hour") + "\n")
 		b.WriteString(theme.ValueBold.Render("--") + "\n\n")
-		b.WriteString(theme.LabelMD.Render(theme.LetterSpace("TOKEN_VELOCITY")) + "\n")
+		b.WriteString(theme.LabelMD.Render("Token Velocity") + "\n")
 		b.WriteString(theme.ValueBold.Render("--") + "\n\n")
-		b.WriteString(theme.LabelMD.Render(theme.LetterSpace("TIME_TO_EXHAUSTION")) + "\n")
+		b.WriteString(theme.LabelMD.Render("Time to Exhaustion") + "\n")
 		b.WriteString(theme.ValueBold.Render("--") + "\n")
 
 		return bg.Padding(1, 2).Render(b.String())
 	}
 
 	// Rate per hour
-	b.WriteString(theme.LabelMD.Render(theme.LetterSpace("RATE_P_HOUR")) + "\n")
+	b.WriteString(theme.LabelMD.Render("Rate/Hour") + "\n")
 	rateStr := fmt.Sprintf("%.1f%%", rate.PercentPerHour)
 	rateCol := rateColor(rate.PercentPerHour)
 	b.WriteString(lipgloss.NewStyle().Foreground(rateCol).Bold(true).Render(rateStr) + "\n\n")
 
 	// Token velocity
-	b.WriteString(theme.LabelMD.Render(theme.LetterSpace("TOKEN_VELOCITY")) + "\n")
+	b.WriteString(theme.LabelMD.Render("Token Velocity") + "\n")
 	tokenStr := formatTokenVelocity(rate.TokensPerHour) + "  t/h"
 	b.WriteString(theme.ValueGreen.Render(tokenStr) + "\n\n")
 
 	// Time to exhaustion
-	tteLabel := theme.LabelMD.Render(theme.LetterSpace("TIME_TO_EXHAUSTION"))
+	tteLabel := theme.LabelMD.Render("Time to Exhaustion")
 	b.WriteString(tteLabel + "\n")
 
 	tteBlock := renderTTEBlock(rate, width-6, animTick)
@@ -64,10 +64,10 @@ func renderTTEBlock(rate data.BurnRate, width, animTick int) string {
 	var style lipgloss.Style
 
 	if rate.TimeToExhaust <= 0 {
-		text = "SAFE"
+		text = "Safe"
 		style = lipgloss.NewStyle().Foreground(theme.ColGreen()).Bold(true)
 	} else {
-		text = "LIMIT IN " + formatDuration(rate.TimeToExhaust)
+		text = "Limit in " + formatDuration(rate.TimeToExhaust)
 		// Pulse when under 30 minutes
 		if rate.TimeToExhaust < 30*time.Minute {
 			if animTick%10 < 5 {

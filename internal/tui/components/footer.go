@@ -17,7 +17,7 @@ func RenderFooter(startTime time.Time, width int) string {
 
 	// Left: version + timestamp
 	left := theme.LabelMD.Render(
-		fmt.Sprintf("CLAUDE_MONITOR_V%s // %s", config.Version, now.Format("2006-01-02T15:04:05Z")),
+		fmt.Sprintf("claude-monitor v%s // %s", config.Version, now.Format("2006-01-02T15:04:05Z")),
 	)
 
 	// Center: version tag
@@ -25,7 +25,7 @@ func RenderFooter(startTime time.Time, width int) string {
 
 	// Right: uptime
 	uptime := formatUptime(time.Since(startTime))
-	right := theme.LabelMD.Render(fmt.Sprintf("UPTIME: %s", uptime))
+	right := theme.LabelMD.Render(fmt.Sprintf("Uptime: %s", uptime))
 
 	// Layout: left --- center --- right
 	leftW := lipgloss.Width(left)
