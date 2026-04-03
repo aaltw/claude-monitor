@@ -1,3 +1,7 @@
 # Build output
 /monitor
+/claude-monitor
 *.exe
+
+# Brainstorm sessions
+.superpowers/
