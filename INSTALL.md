@@ -2,120 +2,136 @@
 
 This file is written for an LLM (Claude Code, Cursor, etc.) to follow step-by-step to install claude-monitor on a user's machine. Every command is exact and copy-pasteable.
 
+**Important for LLM installers:** Each step's commands should be run as a single chained command (using `&&`) from the repo root directory to avoid working directory issues between tool calls.
+
 ## Prerequisites
 
-- **Go 1.21+** — verify with `go version`
-- **tmux** — verify with `tmux -V`
+- **Go 1.26+** — verify with `go version`
+- **tmux** — required for session state tracking; the monitor itself runs without it but sessions will show as Idle
 - **Claude Code CLI** — verify with `claude --version`
-- **jq** — verify with `jq --version`
+- **jq** — used by hook scripts; verify with `jq --version`
 
 ## Step 1: Clone and build
 
 ```bash
-git clone https://github.com/aaltw/claude-monitor.git
-cd claude-monitor
-go build -o claude-monitor ./cmd/monitor/
+mkdir -p ~/.local/share && git clone https://github.com/aaltw/claude-monitor.git ~/.local/share/claude-monitor && cd ~/.local/share/claude-monitor && go build -o claude-monitor ./cmd/monitor/
 ```
 
-Verify: `./claude-monitor --help` or just `./claude-monitor` (press `q` to quit the TUI).
+Verify the binary was built: `ls -la ~/.local/share/claude-monitor/claude-monitor`
 
 ## Step 2: Build the statusline bridge
 
-The statusline binary is what feeds usage data from Claude Code into claude-monitor. It reads Claude Code's status JSON from stdin and writes bridge files to `$TMPDIR`.
+The statusline binary feeds usage data from Claude Code into claude-monitor. It reads Claude Code's status JSON from stdin and writes bridge files to `$TMPDIR`. It is a separate Go module in `scripts/statusline/`.
 
 ```bash
-cd scripts/statusline
-go build -o statusline .
-cp statusline ~/.claude/statusline-bin
-cd ../..
+cd ~/.local/share/claude-monitor/scripts/statusline && go build -o statusline . && mkdir -p ~/.claude && cp statusline ~/.claude/statusline-bin
 ```
 
-Verify: `echo '{}' | ~/.claude/statusline-bin` should output `statusline: invalid JSON input` (expected — it needs real Claude Code status JSON).
+Verify: `echo 'not json' | ~/.claude/statusline-bin` should output `statusline: invalid JSON input` to stderr.
 
 ## Step 3: Install hook scripts
 
 Copy the hook scripts that report session state to claude-monitor:
 
 ```bash
-mkdir -p ~/.claude/hooks
-cp scripts/hooks/tmux-status.sh ~/.claude/hooks/claude-tmux-status.sh
-cp scripts/hooks/context-monitor.sh ~/.claude/hooks/context-monitor.sh
-chmod +x ~/.claude/hooks/claude-tmux-status.sh
-chmod +x ~/.claude/hooks/context-monitor.sh
+mkdir -p ~/.claude/hooks && cp ~/.local/share/claude-monitor/scripts/hooks/tmux-status.sh ~/.claude/hooks/claude-tmux-status.sh && cp ~/.local/share/claude-monitor/scripts/hooks/context-monitor.sh ~/.claude/hooks/context-monitor.sh && chmod +x ~/.claude/hooks/claude-tmux-status.sh ~/.claude/hooks/context-monitor.sh
 ```
 
 ## Step 4: Configure Claude Code settings
 
-Add the following to `~/.claude/settings.json`. If the file already exists, merge these keys into it. If it doesn't exist, create it with this content:
+Read `~/.claude/settings.json` if it exists. You need to add/merge two things:
+
+### 4a: Add the statusLine key
+
+Add this top-level key (it does not conflict with any existing key):
 
 ```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline-bin"
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/claude-tmux-status.sh pretooluse",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/context-monitor.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/claude-tmux-status.sh stop"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/claude-tmux-status.sh notification"
-          }
-        ]
-      }
-    ]
-  }
+"statusLine": {
+  "type": "command",
+  "command": "~/.claude/statusline-bin"
 }
 ```
 
-**Important:** If the user already has hooks configured, the new hook entries must be **appended** to the existing arrays, not replace them. Read the existing file first, merge, then write.
+### 4b: Add hook entries
+
+The `hooks` key contains arrays for each event type. If the user already has hooks, **append** the new entries to the existing arrays. If the event type doesn't exist yet, create it.
+
+Add these hook entries:
+
+**PreToolUse** — append to the `PreToolUse` array:
+```json
+{
+  "matcher": "",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "~/.claude/hooks/claude-tmux-status.sh pretooluse",
+      "async": true
+    }
+  ]
+}
+```
+
+**PostToolUse** — append to the `PostToolUse` array:
+```json
+{
+  "matcher": "",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "~/.claude/hooks/context-monitor.sh",
+      "async": true
+    }
+  ]
+}
+```
+
+**Stop** — append to the `Stop` array:
+```json
+{
+  "matcher": "",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "~/.claude/hooks/claude-tmux-status.sh stop"
+    }
+  ]
+}
+```
+
+**Notification** — append to the `Notification` array:
+```json
+{
+  "matcher": "",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "~/.claude/hooks/claude-tmux-status.sh notification"
+    }
+  ]
+}
+```
+
+### Merge algorithm for LLMs
+
+If `~/.claude/settings.json` does not exist, create it with the full config. If it exists:
+
+1. Read the existing JSON
+2. Set `statusLine` key (overwrites if present, which is fine)
+3. For each hook event type (`PreToolUse`, `PostToolUse`, `Stop`, `Notification`):
+   - If `hooks[eventType]` doesn't exist, create it as an array with the new entry
+   - If it exists, append the new entry to the array (do not deduplicate — Claude Code handles multiple matchers)
+4. Write the result back
 
 ## Step 5: Install the binary (optional)
 
 To make `claude-monitor` available system-wide:
 
 ```bash
-cp claude-monitor /usr/local/bin/
+sudo cp ~/.local/share/claude-monitor/claude-monitor /usr/local/bin/
 ```
 
-Or add the build directory to `$PATH`.
+Or symlink it: `ln -sf ~/.local/share/claude-monitor/claude-monitor ~/.local/bin/claude-monitor` (ensure `~/.local/bin` is on `$PATH`).
 
 ## Step 6: Run
 
@@ -125,7 +141,7 @@ Or add the build directory to `$PATH`.
 claude-monitor
 ```
 
-Keybindings: `q` quit, `r` force refresh, `s` cycle sort order.
+Keybindings: `q` quit, `r` force refresh, `s` cycle sort order (name, status, latency).
 
 Requires a terminal with at least 120 columns and 30 rows.
 
@@ -145,7 +161,7 @@ After installation, start a Claude Code session in tmux and verify:
 
 1. Bridge files appear: `ls $TMPDIR/claude-monitor-*.json` — should show at least one file after Claude Code does some work
 2. Session state files appear: `ls $TMPDIR/claude-session-state-*.json` — should appear after Claude Code runs a tool
-3. TUI shows data: run `claude-monitor` — usage bars and session table should populate
+3. TUI shows data: run `claude-monitor` in a 120+ column terminal — usage bars and session table should populate
 4. Web shows data: run `claude-monitor web` and open `http://localhost:3000` — dashboard should show live data
 
 ## Troubleshooting
@@ -156,7 +172,7 @@ The statusline binary must be configured in `~/.claude/settings.json` under `sta
 
 ### Sessions show as "Idle" even when working
 
-The tmux status hook (`claude-tmux-status.sh`) writes state files using `$PPID` to identify the Claude process. This only works when Claude Code runs inside tmux. Sessions outside tmux will show as Idle.
+The tmux status hook writes state files using `$PPID` to identify the Claude process. This only works when Claude Code runs inside tmux. Sessions in standalone terminals or IDEs will show as Idle but their latency and usage data still works.
 
 ### Latency shows "INF"
 
@@ -171,9 +187,9 @@ The WebSocket connection dropped. The dashboard auto-reconnects every 3 seconds.
 ```
 Claude Code session
     │
-    ├── statusline-bin (stdin JSON → /tmp/claude-monitor-{session}.json)
+    ├── statusline-bin (stdin JSON → $TMPDIR/claude-monitor-{session}.json)
     │
-    ├── tmux-status.sh hook (writes /tmp/claude-session-state-{pid}.json)
+    ├── tmux-status.sh hook (writes $TMPDIR/claude-session-state-{pid}.json)
     │
     └── context-monitor.sh hook (context usage warnings)
 
