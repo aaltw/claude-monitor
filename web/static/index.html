@@ -1,81 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>claude-monitor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="disconnected" class="disconnected">Disconnected — reconnecting...</div>
+  <div id="disconnected" class="disconnected">
+    <span class="material-symbols-outlined icon-sm">cloud_off</span>
+    Disconnected — reconnecting...
+  </div>
+
+  <!-- Background effects -->
+  <div class="scanline"></div>
+  <div class="dot-grid"></div>
 
   <div class="dashboard">
-    <div class="header-bar">
-      <h1>claude-monitor</h1>
-      <div class="meta">
-        <span id="header-version"></span> //
+    <!-- Header -->
+    <header class="header-bar">
+      <div class="header-left">
+        <div class="header-dot"></div>
+        <h1>claude-monitor</h1>
+      </div>
+      <div class="header-meta">
+        <span id="header-version"></span>
+        <span class="header-sep">//</span>
         <span id="header-time"></span>
       </div>
-    </div>
+    </header>
 
+    <!-- Usage Panel -->
     <div class="panel usage-panel">
-      <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+      <div class="panel-head">
         <div>
           <div class="section-label">Compute Metrics</div>
-          <div class="section-title">Usage Statistics</div>
+          <h2 class="section-title">Usage Statistics</h2>
         </div>
-        <div style="text-align:right;">
-          <span class="metric-label" id="stale-indicator"></span>
-        </div>
+        <span class="stale-badge" id="stale-indicator"></span>
       </div>
-      <div style="margin-bottom:20px;">
-        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;">
-          <span style="font-weight:600;">5h Window Usage</span>
-          <span class="metric-label" id="five-hour-resets"></span>
+
+      <div class="bar-group">
+        <div class="bar-header">
+          <span class="bar-title"><span class="bar-dot bar-dot--blue"></span> 5h Window Usage</span>
+          <span class="bar-meta" id="five-hour-resets"></span>
         </div>
         <div class="progress-bar-container">
           <div class="progress-bar-fill" id="five-hour-bar"></div>
           <div class="progress-bar-label" id="five-hour-label"></div>
         </div>
       </div>
-      <div style="margin-bottom:20px;">
-        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;">
-          <span style="font-weight:600;">7d Window Usage</span>
-          <span class="metric-label" id="seven-day-resets"></span>
+
+      <div class="bar-group">
+        <div class="bar-header">
+          <span class="bar-title"><span class="bar-dot bar-dot--peach"></span> 7d Window Usage</span>
+          <span class="bar-meta" id="seven-day-resets"></span>
         </div>
         <div class="progress-bar-container">
           <div class="progress-bar-fill" id="seven-day-bar"></div>
           <div class="progress-bar-label" id="seven-day-label"></div>
         </div>
       </div>
+
       <div class="model-cards" id="model-cards"></div>
     </div>
 
+    <!-- Burn Rate Panel -->
     <div class="panel burn-panel">
-      <div class="section-title" style="margin-bottom:20px;">Burn Rate Analysis</div>
-      <div class="metric-row">
-        <span class="metric-label">Rate/Hour</span>
-        <span class="metric-value" id="burn-rate" style="color:var(--primary);">--</span>
+      <div class="burn-header">
+        <span class="material-symbols-outlined burn-icon">local_fire_department</span>
+        <h2 class="section-title burn-title">Burn Rate</h2>
       </div>
-      <div class="metric-row">
-        <span class="metric-label">Token Velocity</span>
-        <span class="metric-value" id="token-velocity" style="color:var(--green);">--</span>
+
+      <div class="burn-metrics">
+        <div class="metric-row">
+          <span class="metric-label">Rate/Hour</span>
+          <span class="metric-value metric-value--primary" id="burn-rate">--</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Token Velocity</span>
+          <span class="metric-value metric-value--green" id="token-velocity">--</span>
+        </div>
       </div>
+
       <div class="tte-box" id="tte-box">
-        <div class="label">Time to Exhaustion</div>
-        <div class="value" id="tte-value">--</div>
+        <div class="tte-label">Time to Exhaustion</div>
+        <div class="tte-value" id="tte-value">--</div>
       </div>
     </div>
 
+    <!-- Charts -->
     <div class="panel chart-panel">
-      <div class="section-label" style="margin-bottom:10px;">Burn Rate Over Time</div>
+      <div class="section-label">Burn Rate Over Time</div>
       <div class="chart-container"><canvas id="burn-chart"></canvas></div>
       <div class="chart-legend">Last 60 minutes</div>
     </div>
 
     <div class="panel chart-panel">
-      <div class="section-label" style="margin-bottom:10px;">Token Usage Timeline</div>
+      <div class="section-label">Token Usage Timeline</div>
       <div class="chart-container"><canvas id="token-chart"></canvas></div>
       <div class="chart-legend">
         <span><span style="color:var(--tertiary);">&#9632;</span> Input</span>
@@ -83,31 +107,49 @@
       </div>
     </div>
 
+    <!-- Session Table -->
     <div class="panel session-panel">
       <div class="session-header">
-        <span class="section-label" style="font-size:12px;">Active Process Matrix</span>
-        <div style="font-size:10px;color:var(--on-surface-variant);display:flex;gap:16px;">
+        <div class="session-header-left">
+          <span class="material-symbols-outlined icon-sm" style="color:var(--primary);">list</span>
+          <span class="section-label" style="font-size:12px;">Active Process Matrix</span>
+        </div>
+        <div class="session-header-right">
           <span id="session-total"></span>
           <span id="session-load"></span>
         </div>
       </div>
       <table class="session-table">
         <thead>
-          <tr><th>Session</th><th>Task</th><th>Model</th><th>Latency</th><th>Status</th></tr>
+          <tr>
+            <th>Session</th>
+            <th>Task</th>
+            <th>Model</th>
+            <th>Latency</th>
+            <th>Status</th>
+          </tr>
         </thead>
         <tbody id="session-body"></tbody>
       </table>
     </div>
 
+    <!-- Event Log -->
     <div class="panel event-panel">
-      <div class="section-label" style="margin-bottom:10px;">Session Event Log</div>
+      <div class="event-header">
+        <span class="material-symbols-outlined icon-sm" style="color:var(--primary);">terminal</span>
+        <span class="section-label">Session Event Log</span>
+      </div>
       <div id="event-log"></div>
     </div>
 
-    <div class="footer">
-      <span id="footer-left"></span>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-left">
+        <span class="footer-dot"></span>
+        <span id="footer-left"></span>
+      </div>
       <span id="footer-right"></span>
-    </div>
+    </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>

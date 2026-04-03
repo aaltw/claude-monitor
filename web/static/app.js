@@ -175,18 +175,21 @@
         : s.model.indexOf('Sonnet') !== -1 ? 'sonnet'
         : s.model.indexOf('Haiku') !== -1 ? 'haiku' : '';
       var shortModel = s.model.split(' ')[0] || s.model;
-      var icons = {
-        working: '&#x2022;', waiting: '&#x25CF;', blocked: '&#x26A0;',
-        idle: '&#x25CB;', zombie_state: ''
+      var statusIcons = {
+        working: '<span class="material-symbols-outlined icon-sm">sync</span>',
+        waiting: '<span class="material-symbols-outlined icon-sm">hourglass_empty</span>',
+        blocked: '<span class="material-symbols-outlined icon-sm" style="font-variation-settings:\'FILL\' 1;">notifications_active</span>',
+        idle: '<span class="material-symbols-outlined icon-sm">circle</span>',
+        zombie_state: ''
       };
-      var icon = icons[s.status] || '';
+      var icon = statusIcons[s.status] || '';
       var label = s.status.replace('_', ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
 
       html += '<tr>' +
         '<td><span class="session-id" title="' + s.cwd + '" data-pid="' + s.pid + '">' + s.hex_id + '</span></td>' +
         '<td>' + s.name + '</td>' +
         '<td><span class="model-badge ' + modelClass + '">' + shortModel + '</span></td>' +
-        '<td style="color:var(--on-surface-variant);">' + s.latency + '</td>' +
+        '<td style="color:var(--on-surface-variant);font-family:JetBrains Mono,monospace;">' + s.latency + '</td>' +
         '<td><span class="status-chip ' + s.status + '">' + icon + ' ' + label + '</span></td>' +
       '</tr>';
     }
