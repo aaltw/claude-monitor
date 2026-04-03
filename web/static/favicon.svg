@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#1e1e2e"/>
+  <rect x="2" y="2" width="28" height="28" rx="4" fill="#181825" stroke="#45475a" stroke-width="0.5"/>
+  <!-- Usage bar -->
+  <rect x="6" y="8" width="20" height="3" rx="1" fill="#11111b"/>
+  <rect x="6" y="8" width="12" height="3" rx="1" fill="#cba6f7"/>
+  <!-- Burn rate dot -->
+  <circle cx="16" cy="18" r="3" fill="none" stroke="#fab387" stroke-width="1.5"/>
+  <circle cx="16" cy="18" r="1" fill="#fab387"/>
+  <!-- Session dots -->
+  <circle cx="9" cy="25" r="1.5" fill="#89b4fa"/>
+  <circle cx="14" cy="25" r="1.5" fill="#a6e3a1"/>
+  <circle cx="19" cy="25" r="1.5" fill="#fab387"/>
+  <circle cx="24" cy="25" r="1.5" fill="#45475a"/>
+</svg>
