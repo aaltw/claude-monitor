@@ -183,7 +183,7 @@
       var label = s.status.replace('_', ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
 
       html += '<tr>' +
-        '<td><span class="session-id" title="' + s.cwd + '">' + s.hex_id + '</span></td>' +
+        '<td><span class="session-id" title="' + s.cwd + '" data-pid="' + s.pid + '">' + s.hex_id + '</span></td>' +
         '<td>' + s.name + '</td>' +
         '<td><span class="model-badge ' + modelClass + '">' + shortModel + '</span></td>' +
         '<td style="color:var(--on-surface-variant);">' + s.latency + '</td>' +
@@ -303,5 +303,19 @@
   document.addEventListener('DOMContentLoaded', function () {
     initCharts();
     connect();
+
+    // Event delegation for session ID clicks
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('.session-id');
+      if (!el) return;
+      var pid = el.getAttribute('data-pid');
+      if (!pid) return;
+      fetch('/api/tmux/focus/' + pid, { method: 'POST' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.ok) console.warn('tmux focus failed:', data);
+        })
+        .catch(function (err) { console.warn('tmux focus error:', err); });
+    });
   });
 })();
