@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Real-time dashboard for monitoring Claude Code API usage, sessions, and rate limits. Two modes: terminal TUI (bubbletea) and web dashboard (HTTP + WebSocket with Chart.js). Reads bridge files written by a statusline binary and session state from tmux hooks.
+Real-time dashboard for monitoring Claude Code API usage, sessions, and rate limits. Three modes: terminal TUI (bubbletea), web dashboard (HTTP + WebSocket with Chart.js), and reverse proxy (intercepts Claude Code API traffic for context window composition monitoring). Reads bridge files written by a statusline binary and session state from tmux hooks.
 
 ## Commands
 
@@ -14,9 +14,14 @@ go build -o claude-monitor ./cmd/monitor/   # Build
 ./claude-monitor web                         # Run web dashboard (localhost:3000)
 ./claude-monitor web -p 8080                 # Custom port
 ./claude-monitor web --dev                   # Serve static files from disk (hot reload)
+./claude-monitor proxy                       # Run reverse proxy (localhost:8080 -> api.anthropic.com)
+./claude-monitor proxy -p 8081               # Custom proxy port
+./claude-monitor proxy -web http://...       # Custom web server address for push
+./claude-monitor proxy -target http://...    # Custom upstream API target
 go test ./...                                # Run all tests
 go test ./internal/data/ -run TestCalcBurn   # Run single test
 go test ./internal/web/ -v                   # Run web package tests
+go test ./internal/proxy/ -v                 # Run proxy package tests
 go vet ./...                                 # Lint
 ```
 
@@ -28,7 +33,7 @@ cd scripts/statusline && go build -o statusline .   # Build statusline
 ## Architecture
 
 ```
-cmd/monitor/main.go          Entry point: TUI (default) or web subcommand
+cmd/monitor/main.go          Entry point: TUI (default), web, or proxy subcommand
 internal/
   config/config.go            Constants: polling intervals, thresholds, paths
   data/                       Data layer (shared by TUI and web, no UI dependencies)
@@ -42,19 +47,27 @@ internal/
     theme/theme.go            Catppuccin Mocha palette, gradient interpolation
     components/               Stateless rendering functions (usage, burnrate, sessions, footer)
   web/                        Web dashboard server
-    server.go                 HTTP server, WebSocket handler, tmux focus API
+    server.go                 HTTP server, WebSocket handler, tmux focus API, context push endpoint
     hub.go                    WebSocket client registry + broadcast
     poller.go                 Data polling loop, state/history/event message assembly
     history.go                Ring buffer for chart data backfill (720 points)
-    messages.go               JSON message types for WebSocket protocol
+    context_history.go        Ring buffer for context snapshot backfill (720 points)
+    messages.go               JSON message types for WebSocket protocol (incl. ContextMsg)
+  proxy/                      Reverse proxy for intercepting Anthropic API calls
+    types.go                  ContextSnapshot, CategoryTokens types + constants
+    parser.go                 Parse Anthropic Messages API request body into category byte counts
+    estimator.go              Scale byte counts to token counts using response usage.input_tokens
+    proxy.go                  httputil.ReverseProxy with body capture + composition pipeline
+    push.go                   HTTP POST client to push snapshots to web server
 web/
   embed.go                    go:embed for static files (package webfs)
-  static/                     Frontend: index.html, style.css, app.js (Chart.js CDN)
+  static/                     Frontend: index.html, style.css, app.js, context.html, context.js
 scripts/
   statusline/                 Separate Go module — reads Claude Code status JSON from stdin,
                               writes bridge files to $TMPDIR
   hooks/                      Claude Code hook scripts for session state tracking
-  com.aaltw.claude-monitor.plist   macOS launchd agent for running as background service
+  com.aaltw.claude-monitor.plist        macOS launchd agent for web dashboard service
+  com.aaltw.claude-monitor-proxy.plist  macOS launchd agent for proxy daemon
 ```
 
 **Data flow**: Statusline binary writes bridge files -> `internal/data/` reads them -> TUI renders or web server pushes via WebSocket
@@ -68,6 +81,9 @@ scripts/
 - `state` — full dashboard state every 2s (usage, burn rate, sessions, per-model breakdown)
 - `history` — chart data point every 5s (burn rate, tokens over time)
 - `event` — session state changes in real-time
+- `context` — context window composition snapshot pushed by proxy after each API call
+
+**Proxy data flow**: `claude-monitor proxy` intercepts Anthropic API requests, parses request body into 5 categories (system, tools, history, results, thinking), scales byte counts proportionally to actual `usage.input_tokens` from the response, and POSTs a `ContextSnapshot` to `claude-monitor web` via `POST /api/internal/context`. The web server stores it in a 720-entry ring buffer and broadcasts it to all WebSocket clients.
 
 ## Key Design Decisions
 
