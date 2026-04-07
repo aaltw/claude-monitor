@@ -578,3 +578,91 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--outline); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--on-surface-variant); }
+
+/* ── Navigation tabs ──────────────────────────────────────────────────────── */
+
+.header-nav {
+  display: flex;
+  gap: 0;
+  margin-left: 24px;
+  border-left: 1px solid rgba(69,71,90,0.4);
+  padding-left: 20px;
+}
+.nav-tab {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 6px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.15s ease;
+}
+.nav-tab:hover { color: var(--on-surface); }
+.nav-tab--active {
+  color: var(--primary);
+  border-bottom: 2px solid var(--primary);
+}
+
+/* ── Context page ─────────────────────────────────────────────────────────── */
+
+.ctx-composition-panel { grid-column: span 12; }
+
+.ctx-bar {
+  display: flex;
+  height: 32px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 12px 0;
+  background: var(--surface-container);
+}
+.ctx-bar-segment {
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  min-width: 2px;
+}
+
+.ctx-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+}
+.ctx-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ctx-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.ctx-stat-panel { grid-column: span 3; }
+.ctx-stat { text-align: center; }
+.ctx-stat-label {
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-family: 'Space Grotesk', sans-serif;
+  margin-bottom: 8px;
+}
+.ctx-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--on-surface);
+}
+.ctx-stat-value--sm { font-size: 18px; }
+.ctx-stat-detail {
+  font-size: 10px;
+  color: var(--outline);
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ctx-timeline-panel { grid-column: span 12; }

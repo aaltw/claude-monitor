@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>claude-monitor // context</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="disconnected" class="disconnected">
+    <span class="material-symbols-outlined icon-sm">cloud_off</span>
+    Disconnected — reconnecting...
+  </div>
+
+  <div class="scanline"></div>
+  <div class="dot-grid"></div>
+
+  <div class="dashboard">
+    <!-- Header with nav -->
+    <header class="header-bar">
+      <div class="header-left">
+        <div class="header-dot"></div>
+        <h1>claude-monitor</h1>
+        <nav class="header-nav">
+          <a href="/" class="nav-tab">Dashboard</a>
+          <a href="/context.html" class="nav-tab nav-tab--active">Context</a>
+        </nav>
+      </div>
+      <div class="header-meta">
+        <span id="header-version"></span>
+        <span class="header-sep">//</span>
+        <span id="header-time"></span>
+      </div>
+    </header>
+
+    <!-- Composition bar -->
+    <div class="panel ctx-composition-panel">
+      <div class="section-label">Current Composition</div>
+      <div class="ctx-bar" id="ctx-bar"></div>
+      <div class="ctx-legend" id="ctx-legend"></div>
+    </div>
+
+    <!-- Stats cards -->
+    <div class="panel ctx-stat-panel">
+      <div class="ctx-stat">
+        <div class="ctx-stat-label">Context Fill</div>
+        <div class="ctx-stat-value" id="ctx-fill">--</div>
+        <div class="ctx-stat-detail" id="ctx-fill-detail"></div>
+      </div>
+    </div>
+    <div class="panel ctx-stat-panel">
+      <div class="ctx-stat">
+        <div class="ctx-stat-label">Turn</div>
+        <div class="ctx-stat-value" id="ctx-turn">--</div>
+        <div class="ctx-stat-detail" id="ctx-turn-detail"></div>
+      </div>
+    </div>
+    <div class="panel ctx-stat-panel">
+      <div class="ctx-stat">
+        <div class="ctx-stat-label">Biggest Category</div>
+        <div class="ctx-stat-value ctx-stat-value--sm" id="ctx-biggest">--</div>
+        <div class="ctx-stat-detail" id="ctx-biggest-detail"></div>
+      </div>
+    </div>
+    <div class="panel ctx-stat-panel">
+      <div class="ctx-stat">
+        <div class="ctx-stat-label">Proxy Status</div>
+        <div class="ctx-stat-value" id="ctx-proxy-status">--</div>
+        <div class="ctx-stat-detail" id="ctx-proxy-detail">waiting for data</div>
+      </div>
+    </div>
+
+    <!-- Timeline chart -->
+    <div class="panel ctx-timeline-panel">
+      <div class="section-label">Context Composition Over Time</div>
+      <div class="chart-container"><canvas id="ctx-timeline-chart"></canvas></div>
+      <div class="chart-legend">
+        <span><span style="color:#f38ba8;">&#9632;</span> System</span>
+        <span><span style="color:#fab387;">&#9632;</span> Tools</span>
+        <span><span style="color:#89b4fa;">&#9632;</span> History</span>
+        <span><span style="color:#a6e3a1;">&#9632;</span> Results</span>
+        <span><span style="color:#f9e2af;">&#9632;</span> Thinking</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-left">
+        <span class="footer-dot"></span>
+        <span id="footer-left"></span>
+      </div>
+      <span id="footer-right"></span>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="context.js"></script>
+</body>
+</html>
