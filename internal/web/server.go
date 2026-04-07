@@ -16,33 +16,37 @@ import (
 
 // Server is the web dashboard HTTP server.
 type Server struct {
-	hub      *Hub
-	poller   *Poller
-	history  *HistoryBuffer
-	mux      *http.ServeMux
-	addr     string
-	dev      bool
-	staticFS fs.FS
+	hub        *Hub
+	poller     *Poller
+	history    *HistoryBuffer
+	ctxHistory *ContextHistoryBuffer
+	mux        *http.ServeMux
+	addr       string
+	dev        bool
+	staticFS   fs.FS
 }
 
 // NewServer creates a new web server.
 func NewServer(addr string, dev bool, staticFS fs.FS) *Server {
 	hub := NewHub()
-	history := NewHistoryBuffer(720) // 1 hour at 5s intervals
+	history := NewHistoryBuffer(720)       // 1 hour at 5s intervals
+	ctxHistory := NewContextHistoryBuffer(720) // 720 context snapshots
 	poller := NewPoller(hub, history)
 
 	s := &Server{
-		hub:      hub,
-		poller:   poller,
-		history:  history,
-		mux:      http.NewServeMux(),
-		addr:     addr,
-		dev:      dev,
-		staticFS: staticFS,
+		hub:        hub,
+		poller:     poller,
+		history:    history,
+		ctxHistory: ctxHistory,
+		mux:        http.NewServeMux(),
+		addr:       addr,
+		dev:        dev,
+		staticFS:   staticFS,
 	}
 
 	s.mux.HandleFunc("/ws", s.handleWS)
 	s.mux.HandleFunc("/api/tmux/focus/", s.handleTmuxFocus)
+	s.mux.HandleFunc("/api/internal/context", s.handleContextPush)
 	s.mux.Handle("/", s.staticHandler())
 
 	return s
@@ -63,6 +67,31 @@ func (s *Server) staticHandler() http.Handler {
 		return http.FileServer(http.Dir("web/static"))
 	}
 	return http.FileServer(http.FS(s.staticFS))
+}
+
+func (s *Server) handleContextPush(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var msg ContextMsg
+	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	msg.Type = "context"
+
+	s.ctxHistory.Add(msg)
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		http.Error(w, "marshal failed", http.StatusInternalServerError)
+		return
+	}
+	s.hub.Broadcast(data)
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *Server) handleTmuxFocus(w http.ResponseWriter, r *http.Request) {
@@ -168,6 +197,18 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	// Send history backfill
 	entries := s.poller.HistoryEntries()
 	for _, entry := range entries {
+		data, err := json.Marshal(entry)
+		if err != nil {
+			continue
+		}
+		if err := conn.Write(r.Context(), websocket.MessageText, data); err != nil {
+			return
+		}
+	}
+
+	// Send context history backfill
+	ctxEntries := s.ctxHistory.Entries()
+	for _, entry := range ctxEntries {
 		data, err := json.Marshal(entry)
 		if err != nil {
 			continue

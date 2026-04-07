@@ -68,3 +68,23 @@ type EventMsg struct {
 	Action    string    `json:"action"`
 	Detail    string    `json:"detail"`
 }
+
+// ContextMsg wraps a composition snapshot for WebSocket broadcast.
+type ContextMsg struct {
+	Type              string                        `json:"type"`
+	SessionID         string                        `json:"session_id"`
+	Timestamp         time.Time                     `json:"timestamp"`
+	Model             string                        `json:"model"`
+	TotalInputTokens  int                           `json:"total_input_tokens"`
+	ContextWindowSize int                           `json:"context_window_size"`
+	UsedPct           float64                       `json:"used_pct"`
+	Categories        map[string]ContextCategoryMsg `json:"categories"`
+	TurnNumber        int                           `json:"turn_number"`
+}
+
+// ContextCategoryMsg holds per-category token data for WebSocket messages.
+type ContextCategoryMsg struct {
+	Tokens int     `json:"tokens"`
+	Pct    float64 `json:"pct"`
+	Bytes  int     `json:"bytes"`
+}
