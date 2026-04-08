@@ -86,6 +86,43 @@ func TestProxy_InterceptsMessages(t *testing.T) {
 	}
 }
 
+func TestProxy_SkipsStreamingRequests(t *testing.T) {
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Write([]byte("data: {\"type\":\"content_block_delta\"}\n\n"))
+	}))
+	defer upstream.Close()
+
+	pushCalled := false
+	pushServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		pushCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer pushServer.Close()
+
+	p := NewProxy(upstream.URL, pushServer.URL)
+	proxyServer := httptest.NewServer(p.Handler())
+	defer proxyServer.Close()
+
+	reqBody := []byte(`{
+		"model": "claude-sonnet-4-6",
+		"stream": true,
+		"messages": [{"role": "user", "content": "Hello"}]
+	}`)
+	resp, err := http.Post(proxyServer.URL+"/v1/messages", "application/json", bytes.NewReader(reqBody))
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	resp.Body.Close()
+
+	// Give a moment for any goroutine to fire (it shouldn't)
+	time.Sleep(100 * time.Millisecond)
+
+	if pushCalled {
+		t.Error("expected no push for streaming request")
+	}
+}
+
 func TestProxy_NonMessagesPassthrough(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

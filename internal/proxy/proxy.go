@@ -64,12 +64,22 @@ func (p *Proxy) Handler() http.Handler {
 		// Parse the request body
 		parsed, parseErr := ParseRequestBody(reqBody)
 
+		// Skip composition for streaming requests
+		var isStream bool
+		if parseErr == nil {
+			var streamCheck struct {
+				Stream bool `json:"stream"`
+			}
+			json.Unmarshal(reqBody, &streamCheck)
+			isStream = streamCheck.Stream
+		}
+
 		// Use a response recorder to capture the response
-		rec := &responseCapture{ResponseWriter: w}
+		rec := &responseCapture{ResponseWriter: w, statusCode: 200}
 		p.rp.ServeHTTP(rec, r)
 
 		// Process composition in background (don't block the response)
-		if parseErr == nil && rec.statusCode >= 200 && rec.statusCode < 300 {
+		if parseErr == nil && !isStream && rec.statusCode >= 200 && rec.statusCode < 300 {
 			// Extract session ID from x-session-id header if present, otherwise empty
 			sessionID := r.Header.Get("x-session-id")
 			go p.processComposition(parsed, rec.body.Bytes(), sessionID)

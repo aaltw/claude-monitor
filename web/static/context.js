@@ -146,7 +146,7 @@
       'claude-monitor // ' + now.toISOString().slice(0, 19) + 'Z';
     document.getElementById('footer-right').textContent = 'Connected';
     document.getElementById('header-time').textContent = now.toLocaleTimeString();
-    document.getElementById('header-version').textContent = 'context';
+    document.getElementById('header-version').textContent = 'v1.0.0';
   }
 
   function formatTokens(n) {
