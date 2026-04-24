@@ -19,6 +19,7 @@ type Server struct {
 	hub        *Hub
 	poller     *Poller
 	clauditor  *ClauditorPoller
+	jsonl      *JSONLTailer
 	history    *HistoryBuffer
 	ctxHistory *ContextHistoryBuffer
 	mux        *http.ServeMux
@@ -34,11 +35,13 @@ func NewServer(addr string, dev bool, staticFS fs.FS) *Server {
 	ctxHistory := NewContextHistoryBuffer(720) // 720 context snapshots
 	poller := NewPoller(hub, history)
 	clauditor := NewClauditorPoller(hub)
+	jsonl := NewJSONLTailer(hub)
 
 	s := &Server{
 		hub:        hub,
 		poller:     poller,
 		clauditor:  clauditor,
+		jsonl:      jsonl,
 		history:    history,
 		ctxHistory: ctxHistory,
 		mux:        http.NewServeMux(),
@@ -60,6 +63,7 @@ func (s *Server) Run() error {
 	go s.hub.Run()
 	go s.poller.Run()
 	go s.clauditor.Run()
+	go s.jsonl.Run()
 
 	log.Printf("claude-monitor web dashboard: http://%s", s.addr)
 	return http.ListenAndServe(s.addr, s.mux)
@@ -225,6 +229,14 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	// Send latest clauditor snapshot (if any) so new clients paint
 	// immediately instead of waiting for the next 8s tick.
 	if data, ok := s.clauditor.Latest(); ok {
+		if err := conn.Write(r.Context(), websocket.MessageText, data); err != nil {
+			return
+		}
+	}
+
+	// Send latest JSONL context snapshot (if any) — drives Context tab
+	// without requiring the proxy.
+	if data, ok := s.jsonl.Latest(); ok {
 		if err := conn.Write(r.Context(), websocket.MessageText, data); err != nil {
 			return
 		}

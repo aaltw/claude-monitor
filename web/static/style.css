@@ -707,6 +707,58 @@ body {
 
 .ctx-composition-panel { grid-column: span 12; }
 
+.ctx-focus-panel { grid-column: span 12; padding: 16px 24px; }
+.ctx-focus-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ctx-focus-session { flex: 1; min-width: 0; }
+.ctx-focus-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ctx-focus-meta {
+  font-size: 10px;
+  color: var(--outline);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+.ctx-focus-source {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--primary);
+  border: 1px solid rgba(203,166,247,0.4);
+  padding: 4px 10px;
+  border-radius: 2px;
+  background: rgba(203,166,247,0.06);
+}
+
+.ctx-empty {
+  font-size: 11px;
+  color: var(--outline);
+  font-family: 'Inter', sans-serif;
+  padding: 8px 4px 0;
+}
+.ctx-empty code {
+  background: var(--surface-container);
+  color: var(--primary);
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 .ctx-bar {
   display: flex;
   height: 32px;

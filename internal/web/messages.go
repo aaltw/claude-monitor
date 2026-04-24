@@ -122,6 +122,39 @@ type ClauditorSessionMsg struct {
 	SpikeTurns  int       `json:"spike_turns"`
 }
 
+// JSONLContextMsg is a context-composition snapshot derived from Claude
+// Code's own per-session JSONL logs (~/.claude/projects/*/*.jsonl) instead
+// of the reverse proxy. Works without any ANTHROPIC_BASE_URL rerouting.
+type JSONLContextMsg struct {
+	Type        string    `json:"type"`
+	Timestamp   time.Time `json:"timestamp"`
+	SessionID   string    `json:"session_id"`
+	ProjectSlug string    `json:"project_slug"`
+	Model       string    `json:"model"`
+	TurnNumber  int       `json:"turn_number"`
+
+	// Most recent turn's usage breakdown.
+	InputTokens   int `json:"input_tokens"`
+	CacheCreation int `json:"cache_creation_tokens"`
+	CacheRead     int `json:"cache_read_tokens"`
+	OutputTokens  int `json:"output_tokens"`
+
+	// Derived metrics.
+	TotalInputTokens  int       `json:"total_input_tokens"`
+	ContextWindowSize int       `json:"context_window_size"`
+	UsedPct           float64   `json:"used_pct"`
+	CacheHitRatio     float64   `json:"cache_hit_ratio"`
+	InputDelta        int       `json:"input_delta"`
+	LastTurnAt        time.Time `json:"last_turn_at"`
+	ActiveSessions    int       `json:"active_sessions"`
+
+	// Up to N recent turns for timeline backfill.
+	Turns []JSONLTurnMsg `json:"turns"`
+}
+
+// JSONLTurnMsg is one assistant turn's usage, keyed for timeline charts.
+type JSONLTurnMsg = turnEntry
+
 // ClauditorFocusMsg is the detailed focus session from `clauditor status --json`.
 // Includes context-window fields that the sessions list doesn't carry.
 type ClauditorFocusMsg struct {

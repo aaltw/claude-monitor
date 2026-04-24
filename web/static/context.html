@@ -36,11 +36,26 @@
       </div>
     </header>
 
-    <!-- Composition bar -->
+    <!-- Focus session strip -->
+    <div class="panel ctx-focus-panel">
+      <div class="ctx-focus-row">
+        <div class="ctx-focus-session">
+          <div class="section-label">Focus Session</div>
+          <div class="ctx-focus-title" id="ctx-focus-title">--</div>
+          <div class="ctx-focus-meta" id="ctx-focus-meta"></div>
+        </div>
+        <div class="ctx-focus-source" id="ctx-focus-source">jsonl</div>
+      </div>
+    </div>
+
+    <!-- Composition bar (cache-split: read / creation / input) -->
     <div class="panel ctx-composition-panel">
-      <div class="section-label">Current Composition</div>
+      <div class="section-label">Last Turn Prompt Composition</div>
       <div class="ctx-bar" id="ctx-bar"></div>
       <div class="ctx-legend" id="ctx-legend"></div>
+      <div class="ctx-empty" id="ctx-empty">
+        Waiting for assistant turns — tailing <code>~/.claude/projects/*/*.jsonl</code>.
+      </div>
     </div>
 
     <!-- Stats cards -->
@@ -60,29 +75,27 @@
     </div>
     <div class="panel ctx-stat-panel">
       <div class="ctx-stat">
-        <div class="ctx-stat-label">Biggest Category</div>
-        <div class="ctx-stat-value ctx-stat-value--sm" id="ctx-biggest">--</div>
-        <div class="ctx-stat-detail" id="ctx-biggest-detail"></div>
+        <div class="ctx-stat-label">Cache Hit</div>
+        <div class="ctx-stat-value" id="ctx-cache">--</div>
+        <div class="ctx-stat-detail" id="ctx-cache-detail"></div>
       </div>
     </div>
     <div class="panel ctx-stat-panel">
       <div class="ctx-stat">
-        <div class="ctx-stat-label">Proxy Status</div>
-        <div class="ctx-stat-value" id="ctx-proxy-status">--</div>
-        <div class="ctx-stat-detail" id="ctx-proxy-detail">waiting for data</div>
+        <div class="ctx-stat-label">Turn Δ</div>
+        <div class="ctx-stat-value" id="ctx-delta">--</div>
+        <div class="ctx-stat-detail" id="ctx-delta-detail"></div>
       </div>
     </div>
 
-    <!-- Timeline chart -->
+    <!-- Timeline chart: stacked area of cache_read / cache_creation / input per turn -->
     <div class="panel ctx-timeline-panel">
-      <div class="section-label">Context Composition Over Time</div>
+      <div class="section-label">Context Growth per Turn</div>
       <div class="chart-container"><canvas id="ctx-timeline-chart"></canvas></div>
       <div class="chart-legend">
-        <span><span style="color:#f38ba8;">&#9632;</span> System</span>
-        <span><span style="color:#fab387;">&#9632;</span> Tools</span>
-        <span><span style="color:#89b4fa;">&#9632;</span> History</span>
-        <span><span style="color:#a6e3a1;">&#9632;</span> Results</span>
-        <span><span style="color:#f9e2af;">&#9632;</span> Thinking</span>
+        <span><span style="color:#a6e3a1;">&#9632;</span> Cache Read (reused)</span>
+        <span><span style="color:#f9e2af;">&#9632;</span> Cache Creation (new cacheable)</span>
+        <span><span style="color:#f38ba8;">&#9632;</span> Fresh Input (non-cached)</span>
       </div>
     </div>
 
