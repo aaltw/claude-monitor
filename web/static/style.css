@@ -494,6 +494,104 @@ body {
   50% { opacity: 0.6; }
 }
 
+/* ── Clauditor Session Health panel ───────────────────────────────────────── */
+
+.clauditor-panel {
+  grid-column: span 12;
+}
+.clauditor-count {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  border: 1px solid rgba(69,71,90,0.5);
+}
+
+.clauditor-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+}
+.clauditor-table th {
+  text-align: left;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 0 12px 8px;
+  border-bottom: 1px solid rgba(69,71,90,0.35);
+}
+.clauditor-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(69,71,90,0.18);
+  color: var(--on-surface-variant);
+  vertical-align: middle;
+}
+.clauditor-table tr:last-child td { border-bottom: 0; }
+.clauditor-table tr.cl-focus td {
+  background: rgba(203,166,247,0.04);
+  color: var(--on-surface);
+}
+.clauditor-table tr.cl-focus td:first-child {
+  border-left: 2px solid var(--primary);
+  padding-left: 10px;
+}
+.clauditor-table .cl-num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+.clauditor-table .cl-col-session { width: 40%; }
+.cl-session {
+  color: var(--on-surface);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cl-sub {
+  display: block;
+  font-size: 9px;
+  color: var(--outline);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
+}
+.cl-muted { color: var(--outline); }
+.cl-empty {
+  text-align: center;
+  padding: 16px;
+  color: var(--outline);
+  font-style: italic;
+}
+.cl-loop {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--error);
+  border: 1px solid var(--error);
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+}
+
+.clauditor-lifetime {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(69,71,90,0.4);
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
 /* ── Event log ─────────────────────────────────────────────────────────────── */
 
 .event-panel {

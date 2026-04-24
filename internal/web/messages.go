@@ -88,3 +88,51 @@ type ContextCategoryMsg struct {
 	Pct    float64 `json:"pct"`
 	Bytes  int     `json:"bytes"`
 }
+
+// ClauditorMsg is broadcast on the same WS channel as state/history/context.
+// It blends three clauditor CLI calls:
+//   - `sessions --json` → ranked list (Sessions)
+//   - `status   --json` → detailed focus session with context % (Focus)
+//   - `impact   --json` → lifetime stats (Lifetime* fields)
+type ClauditorMsg struct {
+	Type      string    `json:"type"`
+	Timestamp time.Time `json:"timestamp"`
+	HasData   bool      `json:"has_data"`
+
+	Sessions []ClauditorSessionMsg `json:"sessions"`
+	Focus    *ClauditorFocusMsg    `json:"focus"`
+
+	// Lifetime impact (from `clauditor impact --json`).
+	SessionsMonitored   int            `json:"sessions_monitored"`
+	TotalTurnsMonitored int            `json:"total_turns_monitored"`
+	HealthySessionPct   int            `json:"healthy_session_pct"`
+	AvgCacheRatio       float64        `json:"avg_cache_ratio"`
+	Detected            map[string]int `json:"detected"`
+}
+
+// ClauditorSessionMsg is one entry in `clauditor sessions --json`.
+type ClauditorSessionMsg struct {
+	Label       string    `json:"label"`
+	Model       string    `json:"model"`
+	Turns       int       `json:"turns"`
+	LastUpdated time.Time `json:"last_updated"`
+	CacheStatus string    `json:"cache_status"`
+	CacheRatio  float64   `json:"cache_ratio"`
+	Cost        float64   `json:"cost"`
+	SpikeTurns  int       `json:"spike_turns"`
+}
+
+// ClauditorFocusMsg is the detailed focus session from `clauditor status --json`.
+// Includes context-window fields that the sessions list doesn't carry.
+type ClauditorFocusMsg struct {
+	Session        string  `json:"session"`
+	Model          string  `json:"model"`
+	Turns          int     `json:"turns"`
+	CacheStatus    string  `json:"cache_status"`
+	CacheRatio     float64 `json:"cache_ratio"`
+	ContextPercent float64 `json:"context_percent"`
+	ContextTokens  int     `json:"context_tokens"`
+	LoopDetected   bool    `json:"loop_detected"`
+	Cost           float64 `json:"cost"`
+	SavedByCache   float64 `json:"saved_by_cache"`
+}

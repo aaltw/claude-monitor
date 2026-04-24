@@ -96,6 +96,36 @@
       </div>
     </div>
 
+    <!-- Clauditor Session Health -->
+    <div class="panel clauditor-panel">
+      <div class="panel-head">
+        <div>
+          <div class="section-label">Clauditor</div>
+          <h2 class="section-title">Session Health</h2>
+        </div>
+        <span class="clauditor-count" id="clauditor-count">--</span>
+      </div>
+
+      <table class="clauditor-table">
+        <thead>
+          <tr>
+            <th class="cl-col-session">Session</th>
+            <th>Model</th>
+            <th class="cl-num">Turns</th>
+            <th class="cl-num">Context</th>
+            <th class="cl-num">Cache</th>
+            <th class="cl-num">Cost</th>
+            <th class="cl-num">Last</th>
+          </tr>
+        </thead>
+        <tbody id="clauditor-body">
+          <tr><td colspan="7" class="cl-empty">waiting for clauditor…</td></tr>
+        </tbody>
+      </table>
+
+      <div class="clauditor-lifetime" id="clauditor-lifetime"></div>
+    </div>
+
     <!-- Charts -->
     <div class="panel chart-panel">
       <div class="section-label">Burn Rate Over Time</div>

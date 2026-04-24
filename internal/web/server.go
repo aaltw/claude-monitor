@@ -18,6 +18,7 @@ import (
 type Server struct {
 	hub        *Hub
 	poller     *Poller
+	clauditor  *ClauditorPoller
 	history    *HistoryBuffer
 	ctxHistory *ContextHistoryBuffer
 	mux        *http.ServeMux
@@ -32,10 +33,12 @@ func NewServer(addr string, dev bool, staticFS fs.FS) *Server {
 	history := NewHistoryBuffer(720)       // 1 hour at 5s intervals
 	ctxHistory := NewContextHistoryBuffer(720) // 720 context snapshots
 	poller := NewPoller(hub, history)
+	clauditor := NewClauditorPoller(hub)
 
 	s := &Server{
 		hub:        hub,
 		poller:     poller,
+		clauditor:  clauditor,
 		history:    history,
 		ctxHistory: ctxHistory,
 		mux:        http.NewServeMux(),
@@ -56,6 +59,7 @@ func NewServer(addr string, dev bool, staticFS fs.FS) *Server {
 func (s *Server) Run() error {
 	go s.hub.Run()
 	go s.poller.Run()
+	go s.clauditor.Run()
 
 	log.Printf("claude-monitor web dashboard: http://%s", s.addr)
 	return http.ListenAndServe(s.addr, s.mux)
@@ -213,6 +217,14 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
+		if err := conn.Write(r.Context(), websocket.MessageText, data); err != nil {
+			return
+		}
+	}
+
+	// Send latest clauditor snapshot (if any) so new clients paint
+	// immediately instead of waiting for the next 8s tick.
+	if data, ok := s.clauditor.Latest(); ok {
 		if err := conn.Write(r.Context(), websocket.MessageText, data); err != nil {
 			return
 		}

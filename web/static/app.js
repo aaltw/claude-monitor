@@ -31,6 +31,7 @@
         case 'state': handleState(msg); break;
         case 'history': handleHistory(msg); break;
         case 'event': handleEvent(msg); break;
+        case 'clauditor': handleClauditor(msg); break;
       }
     };
   }
@@ -227,6 +228,114 @@
         tokenChart.data.datasets[0].data.shift();
       }
       tokenChart.update('none');
+    }
+  }
+
+  function formatTokens(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return Math.round(n / 1e3) + 'k';
+    return String(n);
+  }
+
+  function relativeTime(iso) {
+    if (!iso) return '';
+    var then = new Date(iso).getTime();
+    if (!then) return '';
+    var diff = Math.max(0, Date.now() - then);
+    var s = Math.floor(diff / 1000);
+    if (s < 60) return s + 's';
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + 'm';
+    var h = Math.floor(m / 60);
+    if (h < 24) return h + 'h';
+    return Math.floor(h / 24) + 'd';
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function cacheColor(ratio) {
+    if (ratio >= 0.85) return 'var(--green)';
+    if (ratio >= 0.5) return 'var(--yellow)';
+    return 'var(--error)';
+  }
+
+  function ctxColor(pct) {
+    if (pct >= 80) return 'var(--error)';
+    if (pct >= 50) return 'var(--secondary)';
+    return 'var(--green)';
+  }
+
+  function handleClauditor(msg) {
+    if (!msg.has_data) return;
+
+    var sessions = Array.isArray(msg.sessions) ? msg.sessions : [];
+    var focus = msg.focus || null;
+
+    document.getElementById('clauditor-count').textContent =
+      sessions.length > 0 ? (sessions.length + ' tracked') : '--';
+
+    var body = document.getElementById('clauditor-body');
+    if (sessions.length === 0) {
+      body.innerHTML = '<tr><td colspan="7" class="cl-empty">no sessions reported</td></tr>';
+    } else {
+      // Decide which row is "focus" — prefer matching by label, fall back to
+      // first row.
+      var focusLabel = focus ? focus.session : null;
+      var html = '';
+      for (var i = 0; i < sessions.length; i++) {
+        var s = sessions[i];
+        var isFocus = focusLabel && s.label === focusLabel;
+        var model = (s.model || '').replace(/^claude-/, '');
+        var modelClass = model.indexOf('opus') !== -1 ? 'opus'
+          : model.indexOf('sonnet') !== -1 ? 'sonnet'
+          : model.indexOf('haiku') !== -1 ? 'haiku' : '';
+        var cacheRatio = Number(s.cache_ratio || 0);
+        var ctxCell = '—';
+        if (isFocus && focus && typeof focus.context_percent === 'number') {
+          var pct = Number(focus.context_percent || 0);
+          ctxCell = '<span style="color:' + ctxColor(pct) + ';">' + pct.toFixed(0) + '%</span>' +
+            '<span class="cl-sub">' + formatTokens(focus.context_tokens || 0) + '</span>';
+        }
+        var loopBadge = isFocus && focus && focus.loop_detected
+          ? ' <span class="cl-loop" title="loop detected">LOOP</span>'
+          : '';
+        html += '<tr' + (isFocus ? ' class="cl-focus"' : '') + '>' +
+          '<td class="cl-session">' + escapeHtml(s.label) + loopBadge + '</td>' +
+          '<td><span class="model-badge ' + modelClass + '">' + escapeHtml(model) + '</span></td>' +
+          '<td class="cl-num">' + s.turns +
+            (s.spike_turns > 0 ? '<span class="cl-sub">+' + s.spike_turns + ' spike</span>' : '') + '</td>' +
+          '<td class="cl-num">' + ctxCell + '</td>' +
+          '<td class="cl-num" style="color:' + cacheColor(cacheRatio) + ';">' +
+            (cacheRatio * 100).toFixed(0) + '%</td>' +
+          '<td class="cl-num">$' + Number(s.cost || 0).toFixed(2) + '</td>' +
+          '<td class="cl-num cl-muted">' + relativeTime(s.last_updated) + '</td>' +
+          '</tr>';
+      }
+      body.innerHTML = html;
+    }
+
+    // Lifetime (impact) strip
+    var lifetime = document.getElementById('clauditor-lifetime');
+    if (msg.sessions_monitored > 0) {
+      var det = msg.detected || {};
+      var parts = [
+        'Lifetime: ' + formatTokens(msg.sessions_monitored) + ' sessions',
+        formatTokens(msg.total_turns_monitored) + ' turns',
+        msg.healthy_session_pct + '% healthy',
+        'avg cache ' + Math.round((msg.avg_cache_ratio || 0) * 100) + '%',
+      ];
+      var flags = [];
+      if (det.cacheIssues) flags.push(det.cacheIssues + ' cache issues');
+      if (det.loops) flags.push(det.loops + ' loops');
+      if (det.contextOverflows) flags.push(det.contextOverflows + ' overflows');
+      if (flags.length) parts.push('detected: ' + flags.join(', '));
+      lifetime.textContent = parts.join('  //  ');
+    } else {
+      lifetime.textContent = '';
     }
   }
 
